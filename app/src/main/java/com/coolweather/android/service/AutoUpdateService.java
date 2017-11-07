@@ -30,11 +30,11 @@ public class AutoUpdateService extends Service {
         updateBingPic();
         AlarmManager manager=(AlarmManager)getSystemService(ALARM_SERVICE);
         int anHour=8*60*60*1000;//这是8小时的毫秒数
-        long triggerAttime= SystemClock.elapsedRealtime()+anHour;
+        long triggerAtTime= SystemClock.elapsedRealtime()+anHour;
         Intent i=new Intent(this,AutoUpdateService.class);
         PendingIntent pi=PendingIntent.getService(this,0,i,0);
         manager.cancel(pi);
-        manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAttime,pi);
+        manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
         return super.onStartCommand(intent,flags,startId);
     }
     /**
@@ -52,12 +52,14 @@ public class AutoUpdateService extends Service {
             HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-                    String resonseText=response.body().string();
-                    Weather weather=Utility.handleWeatherResponse(resonseText);
+                    String responseText=response.body().string();
+                    Weather weather=Utility.handleWeatherResponse(responseText);
                     if (weather!=null&&"ok".equals(weather.status)){
                         SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences(
                                 AutoUpdateService.this
                         ).edit();
+                        editor.putString("weather",responseText);
+                        editor.apply();
                     }
                 }
                 @Override
@@ -74,10 +76,11 @@ public class AutoUpdateService extends Service {
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String bingpic=response.body().string();
-                SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences(AutoUpdateService.this)
+                String bingPic=response.body().string();
+                SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences
+                        (AutoUpdateService.this)
                         .edit();
-                editor.putString("bing_pic",bingpic);
+                editor.putString("bing_pic",bingPic);
                 editor.apply();
             }
             @Override
